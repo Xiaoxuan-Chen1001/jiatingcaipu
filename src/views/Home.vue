@@ -65,7 +65,22 @@
           @click="goDailyDetail(day.date)"
         >
           <div class="daily-date">{{ day.label }}</div>
-          <div class="daily-count">已点 {{ day.count }} 个菜</div>
+
+          <!-- 显示具体菜品和点菜人 -->
+          <div v-if="day.dishes.length" class="dish-tags">
+            <span
+              v-for="(item, idx) in day.dishes.slice(0, 3)"
+              :key="idx"
+              class="dish-tag"
+            >
+              {{ item.text }}
+            </span>
+            <span v-if="day.dishes.length > 3" class="dish-more">
+              等{{ day.count }}个菜
+            </span>
+          </div>
+          <div v-else class="daily-count" style="color: #999">暂无点菜</div>
+
           <div
             class="daily-status"
             :class="day.count > 0 ? 'has-order' : 'no-order'"
@@ -154,13 +169,32 @@ function formatLabel(dateStr) {
 
 async function loadDailyCards() {
   const num = getRangeNum();
-  const cards = [];
+  const dates = [];
   for (let i = 0; i < num; i++) {
-    const date = getDateStr(i);
-    const count = await countOrdersByDate(date);
-    cards.push({ date, label: formatLabel(date), count });
+    dates.push(getDateStr(i));
   }
-  dailyCards.value = cards;
+
+  try {
+    const allOrders = await listOrdersForDates(dates);
+
+    const cards = dates.map((date) => {
+      const dayOrders = allOrders.filter((o) => o.date === date);
+      // 拼接成“点菜人：菜名”的格式
+      const displayItems = dayOrders.map((o) => ({
+        text: `${o.user_nickname || "家人"}：${o.dish_name}`,
+        userId: o.user_nickname, // 可以留作后续扩展
+      }));
+      return {
+        date,
+        label: formatLabel(date),
+        count: dayOrders.length,
+        dishes: displayItems,
+      };
+    });
+    dailyCards.value = cards;
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function switchMode(mode) {
@@ -318,5 +352,25 @@ onUnmounted(() => {
 .daily-status.no-order {
   background: #f3f4f6;
   color: #999;
+}
+.dish-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 10px;
+  min-height: 40px;
+}
+.dish-tag {
+  font-size: 11px;
+  background: #fff1eb;
+  color: #ff7a45;
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: 100%;
+  /* 文字过长时显示省略号 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
