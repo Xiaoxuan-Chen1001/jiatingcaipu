@@ -74,6 +74,8 @@ const categories = [
   "主食",
   "凉菜",
   "甜点",
+  "水果",
+  "小吃",
   "其他",
 ];
 const category = ref("全部");
