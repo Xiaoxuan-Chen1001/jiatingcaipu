@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { showToast } from "vant";
 import { store, saveDish, uploadImage } from "../store";
@@ -82,6 +82,8 @@ const categoryOptions = [
   { text: "主食", value: "主食" },
   { text: "凉菜", value: "凉菜" },
   { text: "甜点", value: "甜点" },
+  { text: "甜点", value: "水果" },
+  { text: "甜点", value: "小吃" },
   { text: "其他", value: "其他" },
 ];
 

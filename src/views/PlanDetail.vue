@@ -49,8 +49,9 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { listOrdersByPlan, cancelOrder } from "../store";
+import { useRoute, useRouter } from "vue-router"; // 👈 增加了 useRouter
+import { showToast } from "vant"; // 👈 增加了 showToast
+import { store, listOrdersByPlan, cancelOrder } from "../store";
 
 const route = useRoute();
 const planId = ref(route.query.planId || "");
@@ -79,11 +80,23 @@ async function load() {
 }
 
 async function removeOne(id) {
-  await cancelOrder(id);
-  load();
+  try {
+    await cancelOrder(id);
+    showToast({ message: "已删除", type: "success" });
+    await load(); // 删除后重新加载
+  } catch (e) {
+    showToast(e.message);
+  }
 }
 
-onMounted(load);
+onMounted(async () => {
+  if (!planId.value) {
+    showToast("计划不存在");
+    router.back();
+    return;
+  }
+  await load();
+});
 </script>
 
 <style scoped>

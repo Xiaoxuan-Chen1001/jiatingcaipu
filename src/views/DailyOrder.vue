@@ -130,8 +130,16 @@ async function clearAll() {
 
 watch(mealType, loadOrders);
 
+let timer = null;
+
 onMounted(async () => {
   await loadDishes();
   await loadOrders();
+  // 每 3 秒自动刷新一次，让别人点的菜实时同步过来
+  timer = setInterval(loadOrders, 3000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 </script>

@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { showToast } from "vant";
 import { store, listDishes, countOrdersByDate, addOrder } from "../store";
@@ -228,6 +228,20 @@ onMounted(async () => {
     await loadDishes();
     await loadDailyCards();
   }
+});
+
+let timer = null;
+
+onMounted(async () => {
+  if (store.family) {
+    await loadDishes();
+    await loadDailyCards();
+    timer = setInterval(loadDailyCards, 3000); // 每 3 秒刷新卡片上的“已点数量”
+  }
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
 });
 </script>
 
