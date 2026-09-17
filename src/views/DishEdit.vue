@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { showToast } from "vant";
 import { store, saveDish, uploadImage } from "../store";
