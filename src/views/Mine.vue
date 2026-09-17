@@ -47,6 +47,11 @@
     </div>
 
     <div class="menu-card">
+      <!--  新增：点菜记录入口  -->
+      <div class="menu-item" @click="$router.push('/order-history')">
+        <span>点菜记录</span><span class="menu-arrow">›</span>
+      </div>
+      <!-- 新增：点菜记录入口 -->
       <div class="menu-item" @click="$router.push('/account-manage')">
         <span>账号安全与管理</span><span class="menu-arrow">›</span>
       </div>
