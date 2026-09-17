@@ -11,6 +11,21 @@ export const store = reactive({
 });
 
 /* ---------- 工具函数 ---------- */
+
+// 生成 8 位数字邀请码
+function genInviteCode() {
+  let code = "";
+  for (let i = 0; i < 8; i++) code += Math.floor(Math.random() * 10);
+  return code;
+}
+
+// 获取今天的日期 YYYY-MM-DD
+export function today() {
+  const d = new Date();
+  const p = (n) => (n < 10 ? "0" + n : "" + n);
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 export function genId() {
   return "u_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 }
@@ -244,7 +259,7 @@ export async function createFamily(name) {
     .update({ family_id: id })
     .eq("id", store.user.id);
   store.user.family_id = id;
-  setLocalUser(store.user);
+  saveLoginState();
   store.family = family;
   return family;
 }
@@ -267,7 +282,7 @@ export async function joinFamily(code) {
     .update({ family_id: family.id })
     .eq("id", store.user.id);
   store.user.family_id = family.id;
-  setLocalUser(store.user);
+  saveLoginState();
   store.family = family;
   return family;
 }
@@ -308,7 +323,7 @@ export async function quitFamily() {
     .update({ family_id: null })
     .eq("id", store.user.id);
   store.user.family_id = null;
-  setLocalUser(store.user);
+  saveLoginState();
   store.family = null;
 }
 
