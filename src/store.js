@@ -522,6 +522,19 @@ export async function clearOrders(date, mealType) {
     .eq("meal_type", mealType);
 }
 
+// 批量获取未来几天的点菜记录（用于首页日期卡片显示具体菜品）
+export async function listOrdersForDates(dates) {
+  if (!store.family || !dates.length) return [];
+  const { data, error } = await supabase
+    .from("orders")
+    .select("date, dish_name, meal_type, user_nickname")
+    .eq("family_id", store.family.id)
+    .in("date", dates)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
 /* ---------- 图片上传 ---------- */
 export async function uploadImage(file, bucket = "dishes") {
   const ext = file.name.split(".").pop() || "jpg";

@@ -66,18 +66,17 @@
         >
           <div class="daily-date">{{ day.label }}</div>
 
-          <!-- 显示具体菜品和点菜人 -->
+          <!-- 显示具体菜品 -->
           <div v-if="day.dishes.length" class="dish-tags">
             <span
-              v-for="(item, idx) in day.dishes.slice(0, 3)"
+              v-for="(dish, idx) in day.dishes.slice(0, 3)"
               :key="idx"
               class="dish-tag"
+              >{{ dish }}</span
             >
-              {{ item.text }}
-            </span>
-            <span v-if="day.dishes.length > 3" class="dish-more">
-              等{{ day.count }}个菜
-            </span>
+            <span v-if="day.dishes.length > 3" class="dish-more"
+              >等{{ day.count }}个菜</span
+            >
           </div>
           <div v-else class="daily-count" style="color: #999">暂无点菜</div>
 
@@ -127,7 +126,13 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { showToast } from "vant";
-import { store, listDishes, countOrdersByDate, addOrder } from "../store";
+import {
+  store,
+  listDishes,
+  countOrdersByDate,
+  addOrder,
+  listOrdersForDates,
+} from "../store";
 
 const router = useRouter();
 const rangeDays = ref("未来 3 天");
@@ -168,6 +173,33 @@ function formatLabel(dateStr) {
 }
 
 async function loadDailyCards() {
+  async function loadDailyCards() {
+    const num = getRangeNum();
+    const dates = [];
+    for (let i = 0; i < num; i++) {
+      dates.push(getDateStr(i));
+    }
+
+    try {
+      // 一次性拉取未来几天的所有点菜记录
+      const allOrders = await listOrdersForDates(dates);
+
+      const cards = dates.map((date) => {
+        const dayOrders = allOrders.filter((o) => o.date === date);
+        // 收集菜品名称（去重更美观，如果想看总数可以不去重）
+        const dishNames = [...new Set(dayOrders.map((o) => o.dish_name))];
+        return {
+          date,
+          label: formatLabel(date),
+          count: dayOrders.length,
+          dishes: dishNames,
+        };
+      });
+      dailyCards.value = cards;
+    } catch (e) {
+      console.error(e);
+    }
+  }
   const num = getRangeNum();
   const dates = [];
   for (let i = 0; i < num; i++) {
@@ -270,7 +302,12 @@ onMounted(async () => {
   if (store.family) {
     await loadDishes();
     await loadDailyCards();
-    timer = setInterval(loadDailyCards, 3000); // 每 3 秒刷新卡片上的“已点数量”
+    // 每 3 秒刷新一次日期卡片，家人点菜实时同步
+    timer = setInterval(() => {
+      if (planMode.value === "daily") {
+        loadDailyCards();
+      }
+    }, 3000);
   }
 });
 
@@ -372,5 +409,30 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dish-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 10px;
+  min-height: 44px;
+}
+.dish-tag {
+  font-size: 11px;
+  background: #fff1eb;
+  color: #ff7a45;
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dish-more {
+  font-size: 11px;
+  color: #999;
+  align-self: center;
 }
 </style>
