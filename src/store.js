@@ -516,3 +516,15 @@ export async function uploadImage(file, bucket = "dishes") {
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
 }
+
+// 补充：用于头像上传时更新用户资料
+export async function updateProfile(patch) {
+  if (!store.user) throw new Error("用户未登录");
+  const { error } = await supabase
+    .from("users")
+    .update(patch)
+    .eq("id", store.user.id);
+  if (error) throw error;
+  Object.assign(store.user, patch);
+  saveLoginState(); // 同步更新本地缓存
+}
