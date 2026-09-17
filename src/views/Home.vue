@@ -66,14 +66,15 @@
         >
           <div class="daily-date">{{ day.label }}</div>
 
-          <!-- 显示具体菜品 -->
+          <!-- 显示具体菜品和点菜人 👇 这里修正了渲染逻辑 -->
           <div v-if="day.dishes.length" class="dish-tags">
             <span
-              v-for="(dish, idx) in day.dishes.slice(0, 3)"
+              v-for="(item, idx) in day.dishes.slice(0, 3)"
               :key="idx"
               class="dish-tag"
-              >{{ dish }}</span
             >
+              {{ item.text }}
+            </span>
             <span v-if="day.dishes.length > 3" class="dish-more"
               >等{{ day.count }}个菜</span
             >
@@ -90,7 +91,7 @@
       </div>
     </template>
 
-    <!-- 模式二：按总量点（直接平铺所有菜品，分早餐和正餐） -->
+    <!-- 模式二：按总量点 -->
     <template v-else>
       <div class="section-title" style="margin-top: 16px">
         按总量点菜（1-7天）
@@ -99,6 +100,26 @@
         <van-tab title="早餐" name="早餐" />
         <van-tab title="正餐" name="正餐" />
       </van-tabs>
+
+      <!-- 清单区域 -->
+      <div v-if="totalPlanItems.length" class="total-cart">
+        <div class="cart-title">已选清单（{{ totalPlanItems.length }}）</div>
+        <div
+          v-for="(item, index) in totalPlanItems"
+          :key="index"
+          class="cart-item"
+        >
+          <span>{{ item.mealType }} · {{ item.dish.name }}</span>
+          <van-button
+            size="mini"
+            type="danger"
+            plain
+            @click="removeTotalOrder(index)"
+            >移除</van-button
+          >
+        </div>
+      </div>
+
       <div v-if="!dishes.length" class="empty-tip">
         菜谱为空，去添加几道菜吧～
       </div>
@@ -126,13 +147,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { showToast } from "vant";
-import {
-  store,
-  listDishes,
-  countOrdersByDate,
-  addOrder,
-  listOrdersForDates,
-} from "../store";
+import { store, listDishes, addOrder, listOrdersForDates } from "../store";
 
 const router = useRouter();
 const rangeDays = ref("未来 3 天");
@@ -141,7 +156,7 @@ const planMode = ref("daily"); // 'daily' | 'total'
 const totalMealType = ref("早餐");
 const dishes = ref([]);
 const dailyCards = ref([]);
-const totalPlanItems = ref([]); // 总量模式下临时存储点菜
+const totalPlanItems = ref([]);
 
 const rangeOptions = [
   { text: "未来 1 天", value: "未来 1 天" },
@@ -172,34 +187,11 @@ function formatLabel(dateStr) {
   return `${parts[1]}月${parts[2]}日 周${week}`;
 }
 
+function removeTotalOrder(index) {
+  totalPlanItems.value.splice(index, 1);
+}
+
 async function loadDailyCards() {
-  async function loadDailyCards() {
-    const num = getRangeNum();
-    const dates = [];
-    for (let i = 0; i < num; i++) {
-      dates.push(getDateStr(i));
-    }
-
-    try {
-      // 一次性拉取未来几天的所有点菜记录
-      const allOrders = await listOrdersForDates(dates);
-
-      const cards = dates.map((date) => {
-        const dayOrders = allOrders.filter((o) => o.date === date);
-        // 收集菜品名称（去重更美观，如果想看总数可以不去重）
-        const dishNames = [...new Set(dayOrders.map((o) => o.dish_name))];
-        return {
-          date,
-          label: formatLabel(date),
-          count: dayOrders.length,
-          dishes: dishNames,
-        };
-      });
-      dailyCards.value = cards;
-    } catch (e) {
-      console.error(e);
-    }
-  }
   const num = getRangeNum();
   const dates = [];
   for (let i = 0; i < num; i++) {
@@ -214,7 +206,6 @@ async function loadDailyCards() {
       // 拼接成“点菜人：菜名”的格式
       const displayItems = dayOrders.map((o) => ({
         text: `${o.user_nickname || "家人"}：${o.dish_name}`,
-        userId: o.user_nickname, // 可以留作后续扩展
       }));
       return {
         date,
@@ -289,13 +280,7 @@ async function submitTotalPlan() {
   }
 }
 
-onMounted(async () => {
-  if (store.family) {
-    await loadDishes();
-    await loadDailyCards();
-  }
-});
-
+// 定时器，用于自动同步家人点菜
 let timer = null;
 
 onMounted(async () => {
@@ -396,27 +381,6 @@ onUnmounted(() => {
   justify-content: center;
   gap: 4px;
   margin-bottom: 10px;
-  min-height: 40px;
-}
-.dish-tag {
-  font-size: 11px;
-  background: #fff1eb;
-  color: #ff7a45;
-  padding: 2px 6px;
-  border-radius: 4px;
-  max-width: 100%;
-  /* 文字过长时显示省略号 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dish-tags {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 10px;
   min-height: 44px;
 }
 .dish-tag {
@@ -434,5 +398,30 @@ onUnmounted(() => {
   font-size: 11px;
   color: #999;
   align-self: center;
+}
+
+.total-cart {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.cart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ff7a45;
+  margin-bottom: 10px;
+}
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f6f8;
+  font-size: 14px;
+}
+.cart-item:last-child {
+  border-bottom: none;
 }
 </style>

@@ -31,7 +31,7 @@
         <template #title>
           <div style="font-size: 15px; font-weight: 500">{{ o.dish_name }}</div>
           <div style="font-size: 12px; color: #999; margin-top: 4px">
-            {{ o.user_nickname }}
+            {{ o.user_nickname }} 点的
           </div>
         </template>
         <template #value>
@@ -58,8 +58,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router"; // 引入了 useRouter
 import { showToast, showConfirmDialog } from "vant";
 import {
   store,
@@ -70,13 +70,17 @@ import {
 } from "../store";
 
 const route = useRoute();
-const date = ref(route.query.date || "");
+const router = useRouter();
+const date = ref(route.query.date || ""); // 如果没传日期，给空字符
 const mealType = ref("早餐");
 const dishes = ref([]);
 const orders = ref([]);
+let timer = null;
 
 const dateLabel = computed(() => {
+  if (!date.value) return "选择日期";
   const parts = date.value.split("-").map(Number);
+  if (parts.length !== 3) return "日期格式错误";
   const week = ["日", "一", "二", "三", "四", "五", "六"][
     new Date(parts[0], parts[1] - 1, parts[2]).getDay()
   ];
@@ -84,14 +88,24 @@ const dateLabel = computed(() => {
 });
 
 async function loadDishes() {
-  dishes.value = await listDishes();
+  try {
+    dishes.value = await listDishes();
+  } catch (e) {
+    showToast(e.message);
+  }
 }
 
 async function loadOrders() {
-  orders.value = await listOrdersByDate(date.value, mealType.value);
+  if (!date.value) return;
+  try {
+    orders.value = await listOrdersByDate(date.value, mealType.value);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function onOrder(d) {
+  if (!date.value) return showToast("日期无效");
   try {
     const planId = "p_daily_" + date.value;
     await addOrder(
@@ -111,8 +125,12 @@ async function onOrder(d) {
 }
 
 async function removeOne(id) {
-  await cancelOrder(id);
-  loadOrders();
+  try {
+    await cancelOrder(id);
+    loadOrders();
+  } catch (e) {
+    showToast(e.message);
+  }
 }
 
 async function clearAll() {
@@ -130,12 +148,15 @@ async function clearAll() {
 
 watch(mealType, loadOrders);
 
-let timer = null;
-
 onMounted(async () => {
+  if (!date.value) {
+    showToast("参数丢失，请重新进入");
+    setTimeout(() => router.back(), 1000);
+    return;
+  }
   await loadDishes();
   await loadOrders();
-  // 每 3 秒自动刷新一次，让别人点的菜实时同步过来
+  // 每 3 秒自动刷新，同步家人的点菜
   timer = setInterval(loadOrders, 3000);
 });
 
@@ -143,3 +164,61 @@ onUnmounted(() => {
   if (timer) clearInterval(timer);
 });
 </script>
+
+<style scoped>
+.dish-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.dish-card {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.dish-card-img {
+  width: 100%;
+  height: 130px;
+  display: block;
+  object-fit: cover;
+}
+.dish-card-img.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  font-size: 42px;
+}
+.dish-card-body {
+  padding: 10px 12px 12px;
+}
+.dish-name {
+  font-size: 15px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dish-cat {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+.dish-add {
+  position: absolute;
+  right: 10px;
+  bottom: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9a5a, #ff7a45);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 10px rgba(255, 122, 69, 0.4);
+}
+</style>

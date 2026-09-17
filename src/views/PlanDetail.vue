@@ -17,6 +17,12 @@
                 >{{ o.meal_type }} · {{ o.dish_name }}</span
               >
             </template>
+            <template #label>
+              <!--  新增这行，显示点菜人  -->
+              <span style="font-size: 12px; color: #999"
+                >{{ o.user_nickname }} 点的</span
+              >
+            </template>
             <template #value>
               <van-button size="mini" type="danger" @click="removeOne(o.id)"
                 >删除</van-button
@@ -34,6 +40,12 @@
           <template #title>
             <span style="font-size: 14px"
               >{{ o.meal_type }} · {{ o.dish_name }}</span
+            >
+          </template>
+          <template #label>
+            <!--  新增这行  -->
+            <span style="font-size: 12px; color: #999"
+              >{{ o.user_nickname }} 点的</span
             >
           </template>
           <template #value>
