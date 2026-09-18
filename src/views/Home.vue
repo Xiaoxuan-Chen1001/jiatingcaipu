@@ -12,22 +12,12 @@
   <div v-else class="page">
     <!-- 顶部：范围选择与模式切换 -->
     <div class="header">
+      <div class="today-date">{{ todayDate }}</div>
       <div class="family-name">{{ store.family.name }}</div>
       <div class="header-row">
-        <van-field
-          v-model="rangeDays"
-          readonly
-          is-link
-          label="计划天数"
-          @click="showRangePicker = true"
-          style="
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 4px 10px;
-            width: 120px;
-            color: #fff;
-          "
-        />
+        <div class="plan-days-btn" @click="showRangePicker = true">
+          <span>{{ rangeDays }}</span>
+        </div>
         <van-popup v-model:show="showRangePicker" position="bottom" round>
           <van-picker
             :columns="rangeOptions"
@@ -157,6 +147,13 @@ const totalMealType = ref("早餐");
 const dishes = ref([]);
 const dailyCards = ref([]);
 const totalPlanItems = ref([]);
+// 获取今天的日期文案（如：9月18日 周五）
+const todayDate = computed(() => {
+  const d = new Date();
+  const p = (n) => (n < 10 ? "0" + n : "" + n);
+  const week = ["日", "一", "二", "三", "四", "五", "六"][d.getDay()];
+  return `${d.getMonth() + 1}月${d.getDate()}日 周${week}`;
+});
 
 const rangeOptions = [
   { text: "未来 1 天", value: "未来 1 天" },
@@ -320,17 +317,35 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: 8px;
 }
+.plan-days-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #fff;
+  font-size: 14px;
+  flex: 1; /* 自适应宽度 */
+  min-width: 0; /* 允许收缩 */
+  white-space: nowrap; /* 文字永不换行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .meal-tabs {
   display: flex;
   background: rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   padding: 3px;
+  flex-shrink: 0; /* ⚠️ 新增：防止被挤扁 */
 }
 .meal-tabs span {
   padding: 5px 16px;
   font-size: 13px;
   border-radius: 999px;
   cursor: pointer;
+  white-space: nowrap; /* ⚠️ 新增：文字不换行 */
 }
 .meal-tabs span.active {
   background: #fff;
@@ -423,5 +438,12 @@ onUnmounted(() => {
 }
 .cart-item:last-child {
   border-bottom: none;
+}
+
+.today-date {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85); /* 半透明白色，不抢家庭名字的风头 */
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
 }
 </style>
