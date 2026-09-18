@@ -8,7 +8,6 @@
     </div>
     <template v-else>
       <router-view />
-      <!-- 只有不在登录页时，才显示底部 Tabbar -->
       <van-tabbar route v-if="$route.path !== '/login'">
         <van-tabbar-item replace to="/home" icon="shopping-cart-o"
           >点菜</van-tabbar-item
@@ -26,19 +25,23 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { store, initStore } from "./store";
+import { themeColor, loadThemeColor } from "./theme";
 
-const themeVars = {
-  primaryColor: "#ff7a45",
-  buttonPrimaryBackground: "#ff7a45",
-  buttonPrimaryBorderColor: "#ff7a45",
+const themeVars = computed(() => ({
+  primaryColor: themeColor.value,
+  buttonPrimaryBackground: themeColor.value,
+  buttonPrimaryBorderColor: themeColor.value,
   buttonBorderRadius: "12px",
-  tabActiveTextColor: "#ff7a45",
-  tabsBottomBarColor: "#ff7a45",
+  tabActiveTextColor: themeColor.value,
+  tabsBottomBarColor: themeColor.value,
   navBarTitleTextColor: "#2b2b2b",
   cellGroupInsetBorderRadius: "12px",
-};
+}));
 
-onMounted(initStore);
+onMounted(() => {
+  loadThemeColor();
+  initStore();
+});
 </script>

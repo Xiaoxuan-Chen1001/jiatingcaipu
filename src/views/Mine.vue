@@ -10,7 +10,6 @@
           :src="store.user.avatar_url"
         />
         <div v-else class="profile-avatar">👤</div>
-        <!-- 隐藏的文件选择器 -->
         <input
           ref="fileInputRef"
           type="file"
@@ -47,11 +46,9 @@
     </div>
 
     <div class="menu-card">
-      <!--  新增：点菜记录入口  -->
       <div class="menu-item" @click="$router.push('/order-history')">
         <span>点菜记录</span><span class="menu-arrow">›</span>
       </div>
-      <!-- 新增：点菜记录入口 -->
       <div class="menu-item" @click="$router.push('/account-manage')">
         <span>账号安全与管理</span><span class="menu-arrow">›</span>
       </div>
@@ -64,10 +61,15 @@
       <div v-if="store.user" class="menu-item" @click="openNicknameDialog">
         <span>修改昵称</span><span class="menu-arrow">›</span>
       </div>
+      <!-- 新增：主题色入口 -->
+      <div class="menu-item" @click="showThemePicker = true">
+        <span>主题色</span>
+        <span class="menu-theme-dot" :style="{ background: themeColor }"></span>
+      </div>
     </div>
   </div>
 
-  <!-- 修改昵称弹窗（改用更稳定的 van-popup） -->
+  <!-- 修改昵称弹窗 -->
   <van-popup
     v-model:show="showDialog"
     round
@@ -96,6 +98,51 @@
       >
     </div>
   </van-popup>
+
+  <!-- 新增：主题色选择弹窗 -->
+  <van-popup
+    v-model:show="showThemePicker"
+    round
+    position="bottom"
+    :style="{ padding: '24px 20px 32px' }"
+  >
+    <div class="theme-title">选择主题色</div>
+    <div class="theme-sub">选一个你喜欢的颜色，整个 App 会跟着变</div>
+
+    <div class="theme-grid">
+      <div
+        v-for="c in PRESET_COLORS"
+        :key="c"
+        class="theme-swatch"
+        :class="{ active: c === themeColor }"
+        :style="{ background: c }"
+        @click="pickColor(c)"
+      >
+        <van-icon v-if="c === themeColor" name="success" color="#fff" />
+      </div>
+    </div>
+
+    <div class="theme-custom">
+      <label class="theme-custom-label">
+        <span>自定义颜色</span>
+        <input
+          type="color"
+          :value="themeColor"
+          @input="pickColor($event.target.value)"
+          class="theme-color-input"
+        />
+      </label>
+    </div>
+
+    <van-button
+      block
+      round
+      type="primary"
+      style="margin-top: 24px"
+      @click="showThemePicker = false"
+      >完成</van-button
+    >
+  </van-popup>
 </template>
 
 <script setup>
@@ -109,6 +156,7 @@ import {
   getFamilyMembers,
   uploadImage,
 } from "../store";
+import { themeColor, applyThemeColor, PRESET_COLORS } from "../theme";
 
 const stats = reactive({ dishes: 0, orders: 0, members: 0 });
 
@@ -134,10 +182,16 @@ async function loadStats() {
   stats.members = m.length;
 }
 
-/* ==================== 头像上传逻辑 ==================== */
+/* ==================== 主题色 ==================== */
+const showThemePicker = ref(false);
+
+function pickColor(hex) {
+  applyThemeColor(hex);
+}
+
+/* ==================== 头像上传 ==================== */
 const fileInputRef = ref(null);
 
-// 触发电脑文件选择器
 function triggerAvatarUpload() {
   if (!store.user) {
     showToast("请先设置昵称");
@@ -146,21 +200,15 @@ function triggerAvatarUpload() {
   fileInputRef.value.click();
 }
 
-// 处理选中的图片并上传
 async function handleAvatarChange(e) {
   const file = e.target.files[0];
   if (!file) return;
 
   try {
     showToast({ message: "上传中...", duration: 0, forbidClick: true });
-    // 上传到 Supabase 的 avatars 存储桶
     const fileUrl = await uploadImage(file, "avatars");
-    // 更新用户资料
     await updateProfile({ avatar_url: fileUrl });
-
-    // 立即更新页面上的头像（无需刷新页面）
     store.user.avatar_url = fileUrl;
-
     showToast({ message: "头像更新成功", type: "success" });
   } catch (err) {
     showToast("上传失败：" + err.message);
@@ -169,16 +217,15 @@ async function handleAvatarChange(e) {
   }
 }
 
+/* ==================== 修改昵称 ==================== */
 const showDialog = ref(false);
 const nicknameInput = ref("");
 
-// 打开弹窗，并自动填入原有昵称
 function openNicknameDialog() {
   nicknameInput.value = store.user?.nickname || "";
   showDialog.value = true;
 }
 
-// 保存昵称
 async function saveNickname() {
   const name = nicknameInput.value.trim();
   if (!name) {
@@ -192,7 +239,6 @@ async function saveNickname() {
       await register(name);
     }
     showToast({ message: "保存成功", type: "success" });
-    // 刷新页面状态，让顶部卡片和统计数据同步更新
     window.location.reload();
   } catch (e) {
     showToast(e.message);
@@ -202,3 +248,85 @@ async function saveNickname() {
 watch(() => store.family, loadStats, { immediate: true });
 onMounted(loadStats);
 </script>
+
+<style scoped>
+/* 新增：主题色相关样式 */
+.menu-theme-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.theme-title {
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-main);
+}
+.theme-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 20px;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.theme-swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.theme-swatch:active {
+  transform: scale(0.92);
+}
+.theme-swatch.active {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px var(--brand);
+}
+
+.theme-custom {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 18px;
+}
+.theme-custom-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+.theme-color-input {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.theme-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.theme-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+</style>
