@@ -61,14 +61,25 @@
       </van-button>
     </div>
   </div>
+
+  <!-- 图片裁剪组件 -->
+  <ImageCropper
+    v-model:show="showCropper"
+    :file="cropperFile"
+    :aspect="4 / 3"
+    :max-size="1080"
+    @confirm="onCropConfirm"
+    @cancel="onCropCancel"
+  />
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, reactive } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { showToast } from "vant";
 import { store, saveDish, uploadImage, checkDishNameExists } from "../store";
 import { supabase } from "../supabase";
+import ImageCropper from "../components/ImageCropper.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -95,31 +106,49 @@ const form = reactive({
   category: "家常菜",
 });
 
+/* ---------- 图片裁剪 ---------- */
+const cropperFile = ref(null);
+const showCropper = ref(false);
+
 function onPickCat({ selectedOptions }) {
   if (selectedOptions && selectedOptions.length) {
-    form.category = selectedOptions[0].value; // 改成取 .value
+    form.category = selectedOptions[0].value;
   }
   showPicker.value = false;
 }
 
-async function pickImage() {
+function pickImage() {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
-  input.onchange = async () => {
+  input.onchange = () => {
     const file = input.files[0];
     if (!file) return;
-    try {
-      showToast({ message: "上传中…", duration: 0 });
-      form.image_url = await uploadImage(file, "dishes");
-      showToast({ message: "上传成功", type: "success" });
-    } catch (e) {
-      showToast("上传失败：" + e.message);
-    }
+    cropperFile.value = file;
+    showCropper.value = true;
   };
   input.click();
 }
 
+async function onCropConfirm(blob) {
+  if (!blob) return;
+  try {
+    showToast({ message: "上传中…", duration: 0, forbidClick: true });
+    const file = new File([blob], `dish_${Date.now()}.jpg`, {
+      type: "image/jpeg",
+    });
+    form.image_url = await uploadImage(file, "dishes");
+    showToast({ message: "上传成功", type: "success" });
+  } catch (e) {
+    showToast("上传失败：" + e.message);
+  }
+}
+
+function onCropCancel() {
+  cropperFile.value = null;
+}
+
+/* ---------- 保存 ---------- */
 async function save() {
   if (!form.name.trim()) return showToast("请填写菜名");
   if (!store.family) return showToast("请先创建或加入家庭");
