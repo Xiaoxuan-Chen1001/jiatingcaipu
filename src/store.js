@@ -556,3 +556,44 @@ export async function updateProfile(patch) {
   Object.assign(store.user, patch);
   saveLoginState(); // 同步更新本地缓存
 }
+// 检查同家庭下是否已存在同名菜品（excludeId 用于编辑时排除自己）
+export async function checkDishNameExists(name, familyId, excludeId = null) {
+  let query = supabase
+    .from("dishes")
+    .select("id")
+    .eq("family_id", familyId)
+    .eq("name", name.trim());
+  if (excludeId) query = query.neq("id", excludeId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data && data.length > 0;
+}
+
+// 获取菜品的点菜次数：近 30 天 + 历史累计
+export async function getDishOrderStats(dishId, familyId) {
+  const d = new Date();
+  d.setDate(d.getDate() - 30);
+  const p = (n) => (n < 10 ? "0" + n : "" + n);
+  const since = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+
+  const [totalRes, recentRes] = await Promise.all([
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("dish_id", dishId)
+      .eq("family_id", familyId),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("dish_id", dishId)
+      .eq("family_id", familyId)
+      .gte("created_at", since),
+  ]);
+
+  if (totalRes.error) throw new Error(totalRes.error.message);
+  if (recentRes.error) throw new Error(recentRes.error.message);
+  return {
+    total: totalRes.count || 0,
+    recent30: recentRes.count || 0,
+  };
+}

@@ -16,6 +16,7 @@ const routes = [
   { path: "/plan-detail", component: () => import("./views/PlanDetail.vue") },
   { path: "/dishes", component: () => import("./views/Dishes.vue") },
   { path: "/dish-edit", component: () => import("./views/DishEdit.vue") },
+  { path: "/dish/:id", component: () => import("./views/DishDetail.vue") },
   { path: "/family", component: () => import("./views/Family.vue") },
   { path: "/mine", component: () => import("./views/Mine.vue") },
 ];

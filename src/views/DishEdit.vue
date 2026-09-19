@@ -67,7 +67,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { showToast } from "vant";
-import { store, saveDish, uploadImage } from "../store";
+import { store, saveDish, uploadImage, checkDishNameExists } from "../store";
 import { supabase } from "../supabase";
 
 const route = useRoute();
@@ -122,8 +122,17 @@ async function pickImage() {
 
 async function save() {
   if (!form.name.trim()) return showToast("请填写菜名");
+  if (!store.family) return showToast("请先创建或加入家庭");
+
   saving.value = true;
   try {
+    const exists = await checkDishNameExists(
+      form.name,
+      store.family.id,
+      isEdit.value ? form.id : null,
+    );
+    if (exists) return showToast("已有同名菜品，请换个名字");
+
     await saveDish({ ...form });
     showToast({ message: "保存成功", type: "success" });
     setTimeout(() => router.back(), 500);

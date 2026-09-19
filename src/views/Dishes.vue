@@ -16,7 +16,7 @@
         还没有菜品，点右下角添加吧～
       </div>
       <van-cell-group v-else inset>
-        <van-cell v-for="d in dishes" :key="d.id">
+        <van-cell v-for="d in dishes" :key="d.id" @click="goDetail(d)">
           <template #icon>
             <img
               v-if="d.image_url"
@@ -39,16 +39,17 @@
             </div>
           </template>
           <template #value>
-            <van-button size="mini" plain type="primary" @click="edit(d)"
+            <van-button size="mini" plain type="primary" @click.stop="edit(d)"
               >编辑</van-button
             >
             <van-button
               size="mini"
               plain
               type="danger"
-              @click="del(d)"
+              @click.stop="del(d)"
               style="margin-left: 6px"
               >删除</van-button
+            >
             >
           </template>
         </van-cell>
@@ -104,6 +105,9 @@ function add() {
 
 function edit(d) {
   router.push({ path: "/dish-edit", query: { id: d.id } });
+}
+function goDetail(d) {
+  router.push(`/dish/${d.id}`);
 }
 
 async function del(d) {
