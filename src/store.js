@@ -614,3 +614,9 @@ export async function getDishOrderStats(dishId, familyId) {
     recent30: recentRes.count || 0,
   };
 }
+// 批量删除菜品
+export async function deleteDishes(ids) {
+  if (!ids || !ids.length) return;
+  const { error } = await supabase.from("dishes").delete().in("id", ids);
+  if (error) throw new Error(error.message);
+}
