@@ -1,11 +1,5 @@
 <template>
-  <van-nav-bar title="我的菜谱" fixed placeholder>
-    <template #right>
-      <span class="manage-btn" @click="toggleManage">
-        {{ manageMode ? "取消" : "管理" }}
-      </span>
-    </template>
-  </van-nav-bar>
+  <van-nav-bar title="我的菜谱" fixed placeholder />
 
   <div class="page">
     <van-search
@@ -16,6 +10,13 @@
     <van-tabs v-model:active="category" @change="load" shrink>
       <van-tab v-for="c in categories" :key="c" :title="c" :name="c" />
     </van-tabs>
+
+    <!-- 管理按钮：分类下方，靠右 -->
+    <div class="manage-row">
+      <span class="manage-btn" @click="toggleManage">
+        {{ manageMode ? "取消" : "管理" }}
+      </span>
+    </div>
 
     <div style="margin-top: 12px">
       <div v-if="!dishes.length" class="empty-tip">
@@ -216,10 +217,17 @@ onMounted(load);
 </script>
 
 <style scoped>
+.manage-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px 0;
+}
+
 .manage-btn {
   color: var(--brand);
   font-size: 14px;
   cursor: pointer;
+  padding: 4px 8px;
 }
 
 .cell-checkbox {
