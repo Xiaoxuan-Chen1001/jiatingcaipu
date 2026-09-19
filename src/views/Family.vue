@@ -43,17 +43,20 @@
             <span v-if="m.id === store.user.id" class="me-tag">我</span>
           </div>
 
-          <!-- 只有房主才能看到“移除”按钮，且不能移除自己 -->
-          <van-button
+          <!-- 只有房主才能看到“转让”和“移除”按钮，且不能操作自己 -->
+          <div
             v-if="
               store.user.id === store.family.owner_id && m.id !== store.user.id
             "
-            size="mini"
-            plain
-            type="danger"
-            @click="onKick(m)"
-            >移除</van-button
+            style="display: flex; gap: 6px"
           >
+            <van-button size="mini" plain type="primary" @click="onTransfer(m)"
+              >转让</van-button
+            >
+            <van-button size="mini" plain type="danger" @click="onKick(m)"
+              >移除</van-button
+            >
+          </div>
 
           <!-- 如果是房主本人，显示房主标签 -->
           <div v-else-if="m.id === store.family.owner_id" class="owner-tag">
@@ -119,7 +122,8 @@ import {
   renameFamily,
   quitFamily,
   getFamilyMembers,
-  kickMember, // 👈 确保这个引入了
+  kickMember,
+  transferOwnership, // 👈 确保这个引入了
 } from "../store";
 
 const createName = ref("");
@@ -141,6 +145,21 @@ async function onKick(member) {
     });
     await kickMember(member.id);
     showToast({ message: "已移除", type: "success" });
+    loadMembers();
+  } catch (e) {
+    if (e !== "cancel") showToast(e.message);
+  }
+}
+
+// 房主转让
+async function onTransfer(member) {
+  try {
+    await showConfirmDialog({
+      title: "转让房主",
+      message: `确定把房主转让给「${member.nickname}」吗？转让后你将成为普通成员。`,
+    });
+    await transferOwnership(member.id);
+    showToast({ message: "已转让", type: "success" });
     loadMembers();
   } catch (e) {
     if (e !== "cancel") showToast(e.message);

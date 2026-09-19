@@ -353,6 +353,23 @@ export async function getFamilyMembers(familyId) {
   return data || [];
 }
 
+// 转让房主给新成员（仅当前房主可操作）
+export async function transferOwnership(newOwnerId) {
+  if (!store.family) throw new Error("未加入家庭");
+  if (store.user.id !== store.family.owner_id) {
+    throw new Error("只有房主可以转让");
+  }
+
+  const { error } = await supabase
+    .from("families")
+    .update({ owner_id: newOwnerId })
+    .eq("id", store.family.id);
+  if (error) throw new Error(error.message);
+
+  // 同步本地状态，让界面立刻反映新房主
+  store.family.owner_id = newOwnerId;
+}
+
 /* ---------- 菜品 ---------- */
 export async function listDishes(category = "全部", keyword = "") {
   let q = supabase.from("dishes").select("*").eq("family_id", store.family.id);
