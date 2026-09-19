@@ -281,7 +281,7 @@ body {
 .me-tag {
   font-size: 11px;
   color: var(--shadow-brand);
-  background: #fff1eb;
+  background: var(--brand-soft);
   padding: 2px 8px;
   border-radius: 999px;
   margin-left: 6px;

@@ -392,7 +392,7 @@ onUnmounted(() => {
   display: inline-block;
 }
 .daily-status.has-order {
-  background: #fff1eb;
+  background: var(--brand-soft);
   color: var(--shadow-brand);
 }
 .daily-status.no-order {
@@ -409,7 +409,7 @@ onUnmounted(() => {
 }
 .dish-tag {
   font-size: 11px;
-  background: #fff1eb;
+  background: var(--brand-soft);
   color: var(--shadow-brand);
   padding: 2px 6px;
   border-radius: 4px;
