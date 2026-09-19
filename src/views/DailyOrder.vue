@@ -26,8 +26,13 @@
     <div v-if="!orders.length" class="empty-tip">
       还没有点菜，去下面点一道吧～
     </div>
+
     <van-cell-group v-else inset>
-      <van-cell v-for="o in orders" :key="o.id">
+      <van-cell
+        v-for="o in orders"
+        :key="o.id"
+        @click="goDishDetail(o.dish_id)"
+      >
         <template #title>
           <div style="font-size: 15px; font-weight: 500">{{ o.dish_name }}</div>
           <div style="font-size: 12px; color: #999; margin-top: 4px">
@@ -44,14 +49,19 @@
 
     <div class="section-title" style="margin-top: 24px">选菜</div>
     <div class="dish-grid">
-      <div v-for="d in dishes" :key="d.id" class="dish-card">
+      <div
+        v-for="d in dishes"
+        :key="d.id"
+        class="dish-card"
+        @click="goDishDetail(d)"
+      >
         <img v-if="d.image_url" :src="d.image_url" class="dish-card-img" />
         <div v-else class="dish-card-img placeholder">🍲</div>
         <div class="dish-card-body">
           <div class="dish-name">{{ d.name }}</div>
           <div class="dish-cat">{{ d.category }}</div>
         </div>
-        <div class="dish-add" @click="onOrder(d)">＋</div>
+        <div class="dish-add" @click.stop="onOrder(d)">＋</div>
       </div>
     </div>
   </div>
@@ -122,6 +132,10 @@ async function onOrder(d) {
   } catch (e) {
     showToast(e.message);
   }
+}
+
+function goDishDetail(id) {
+  router.push(`/dish/${id}`);
 }
 
 async function removeOne(id) {

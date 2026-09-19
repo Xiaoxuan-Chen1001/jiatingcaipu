@@ -114,14 +114,19 @@
         菜谱为空，去添加几道菜吧～
       </div>
       <div v-else class="dish-grid" style="margin-top: 12px">
-        <div v-for="d in dishes" :key="d.id" class="dish-card">
+        <div
+          v-for="d in dishes"
+          :key="d.id"
+          class="dish-card"
+          @click="goDishDetail(d)"
+        >
           <img v-if="d.image_url" :src="d.image_url" class="dish-card-img" />
           <div v-else class="dish-card-img placeholder">🍲</div>
           <div class="dish-card-body">
             <div class="dish-name">{{ d.name }}</div>
             <div class="dish-cat">{{ d.category }}</div>
           </div>
-          <div class="dish-add" @click="onTotalOrder(d)">＋</div>
+          <div class="dish-add" @click.stop="onTotalOrder(d)">＋</div>
         </div>
       </div>
       <div style="margin-top: 20px">
@@ -234,6 +239,10 @@ function onRangeChange({ selectedOptions }) {
 
 function goDailyDetail(date) {
   router.push({ path: "/daily-order", query: { date } });
+}
+
+function goDishDetail(d) {
+  router.push(`/dish/${d.id}`);
 }
 
 async function loadDishes() {
