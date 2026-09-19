@@ -2,11 +2,13 @@
 import { ref } from "vue";
 
 // 当前主题色（响应式），从 localStorage 读，没有则用默认橙
-export const themeColor = ref(localStorage.getItem("themeColor") || "#ff7a45");
+export const themeColor = ref(
+  localStorage.getItem("themeColor") || "var(--shadow-brand)",
+);
 
 // 预设色板
 export const PRESET_COLORS = [
-  "#ff7a45", // 暖橙（默认）
+  "var(--shadow-brand)", // 暖橙（默认）
   "#f56c6c", // 番茄红
   "#e6a23c", // 琥珀
   "#67c23a", // 草绿

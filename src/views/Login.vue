@@ -201,7 +201,7 @@ async function onReset() {
 }
 .login-header h1 {
   font-size: 28px;
-  color: #ff7a45;
+  color: var(--shadow-brand);
   margin: 0 0 10px;
 }
 .login-header p {
@@ -211,7 +211,7 @@ async function onReset() {
 .link-row {
   text-align: center;
   margin-top: 16px;
-  color: #ff7a45;
+  color: var(--shadow-brand);
   font-size: 14px;
   cursor: pointer;
 }

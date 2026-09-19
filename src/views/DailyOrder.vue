@@ -213,12 +213,12 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff9a5a, #ff7a45);
+  background: var(--brand-gradient);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  box-shadow: 0 4px 10px rgba(255, 122, 69, 0.4);
+  box-shadow: 0 4px 10px var(--shadow-brand);
 }
 </style>

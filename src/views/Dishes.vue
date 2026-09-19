@@ -129,6 +129,6 @@ onMounted(load);
   width: 56px;
   height: 56px;
   font-size: 22px;
-  box-shadow: 0 6px 16px rgba(255, 122, 69, 0.4);
+  box-shadow: 0 6px 16px var(--shadow-brand);
 }
 </style>

@@ -300,7 +300,7 @@ onUnmounted(() => {
 
 <style scoped>
 .header {
-  background: linear-gradient(135deg, #ff9a5a, #ff7a45);
+  background: var(--brand-gradient);
   border-radius: 14px;
   padding: 18px;
   color: #fff;
@@ -349,7 +349,7 @@ onUnmounted(() => {
 }
 .meal-tabs span.active {
   background: #fff;
-  color: #ff7a45;
+  color: var(--shadow-brand);
   font-weight: 600;
 }
 
@@ -384,7 +384,7 @@ onUnmounted(() => {
 }
 .daily-status.has-order {
   background: #fff1eb;
-  color: #ff7a45;
+  color: var(--shadow-brand);
 }
 .daily-status.no-order {
   background: #f3f4f6;
@@ -401,7 +401,7 @@ onUnmounted(() => {
 .dish-tag {
   font-size: 11px;
   background: #fff1eb;
-  color: #ff7a45;
+  color: var(--shadow-brand);
   padding: 2px 6px;
   border-radius: 4px;
   max-width: 90%;
@@ -425,7 +425,7 @@ onUnmounted(() => {
 .cart-title {
   font-size: 14px;
   font-weight: 600;
-  color: #ff7a45;
+  color: var(--shadow-brand);
   margin-bottom: 10px;
 }
 .cart-item {
